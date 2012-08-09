@@ -160,6 +160,8 @@ ngrams([], _) ->
 ngrams(Text, Length) ->
     Tokens = tokenize(Text, Length),
     Rest = case length(Tokens) of
+	       0 ->
+		   [];
                1 ->
                    Tokens;
                _ ->

@@ -41,10 +41,7 @@ init() ->
 
 %% write profile to table
 write_profile(Key, P) ->
-    Ret = ets:insert(?ETS_TABLE, {{Key}, P}),
-    ?debugFmt("~p~n",[Ret]),
-    Ret.
-    
+    true = ets:insert(?ETS_TABLE, {{Key}, P}).
 
 %% return all language profiles
 read_profiles() ->
@@ -140,15 +137,33 @@ train_from_files(_, []) ->
     ok;
 train_from_files(Directory, [FileInfo|Files]) when is_list(Directory) ->
     [BiName, File, _CharSet, _Name] = FileInfo,
-    %% read from file
-    ?debugFmt("~p/~p~n", [Directory, File]),
-    {ok,B} = file:read_file(Directory++"/"++File),    
-    ?debugMsg("finished reading file"),
-    PL = ngrams(binary_to_list(B)),
-    P = dict:from_list(PL),
-    ?debugFmt("writing ~p to Db",[BiName]),
-    write_profile(BiName, P),
+
+    Dict = case filelib:is_file(filename:join([Directory, "compiled", File])) of
+	       true ->
+		   {ok, Bin} = file:read_file(filename:join([Directory, "compiled", File])),
+		   binary_to_term(Bin);
+	       false ->
+		   %% read from file
+		   ?debugFmt("~p/~p~n", [Directory, File]),
+		   {ok,B} = file:read_file(filename:join(Directory, File)),
+		   ?debugMsg("finished reading file"),
+		   PL = ngrams(binary_to_list(B)),
+		   P = dict:from_list(PL),
+		   mkdir(filename:join(Directory, "compiled")),
+		   file:write_file(filename:join([Directory, "compiled", File]), term_to_binary(P)),
+		   ?debugFmt("writing ~p to Db",[BiName]),
+		   P
+	   end,
+
+    write_profile(BiName, Dict),
     train_from_files(Directory, Files).
+
+mkdir(Directory) ->
+    case filelib:is_dir(Directory) of
+	true -> ok;
+	_ -> ok = file:make_dir(Directory)
+    end.
+	    
 
 %% ngrams(Text) return a list of ngrams for given text
 -spec ngrams(string()) ->

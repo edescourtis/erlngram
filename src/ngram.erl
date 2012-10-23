@@ -166,8 +166,7 @@ mkdir(Directory) ->
 	    
 
 %% ngrams(Text) return a list of ngrams for given text
--spec ngrams(string()) ->
-    tuple().
+-spec ngrams(string()) -> list(tuple()).
 ngrams(Text) ->
     ngrams(Text, length(Text)).
 ngrams([], _) ->
@@ -266,8 +265,7 @@ tokenize(Text, Length) ->
 %% keep track of the best distance. This ends the function when Best
 %% is less than the computed distance.  The last parameter is the
 %% distance accumulator.
--spec compute_distance(list(), dict(), integer(), integer()) ->
-    tuple().
+-spec compute_distance(list(), dict(), integer(), integer()) -> number().
 compute_distance(P1, P2, Best) ->
     compute_distance(P1, P2, Best, 0).
 compute_distance([], _P2, _Best, X) ->
